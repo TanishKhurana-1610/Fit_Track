@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Edit Workout</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}"
+    >
+</head>
+<body class="premium-app-page edit-workout-page">
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+    FitTrack
+</a>
+
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('workouts') }}">My Workouts</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('plans') }}">Plans</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <div class="dropdown">
+                            <button
+                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Open profile menu"
+                            >
+                                {% if nav_profile and nav_profile.avatar_filename %}
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                        alt="Profile"
+                                        class="profile-icon"
+                                    >
+                                {% else %}
+                                    <span class="profile-icon profile-icon-fallback">
+                                        {% if nav_profile and nav_profile.name %}
+                                            {% set name_parts = nav_profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                        {% elif nav_email %}
+                                            {{ nav_email[0]|upper }}
+                                        {% else %}
+                                            U
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <section class="mb-4">
+                        <div class="card shadow-sm border-0 hero-card">
+                            <div class="card-body p-4">
+                                <p class="text-success fw-semibold mb-1">Workout Details</p>
+                                <h1 class="h3 mb-2">Edit Workout</h1>
+                                <p class="mb-0 text-muted">
+                                    Update this workout so your training history stays accurate.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ messages[0] }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <section>
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body p-4">
+                                <form method="POST" action="{{ url_for('edit_workout', workout_id=workout.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="date" class="form-label">Date</label>
+                                            <input
+                                                type="date"
+                                                class="form-control"
+                                                id="date"
+                                                name="date"
+                                                value="{{ workout.date }}"
+                                                max="{{ today_date }}"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="type" class="form-label">Workout Type</label>
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="type"
+                                                name="type"
+                                                value="{{ workout.type }}"
+                                                placeholder="Running, Gym, Swimming"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="duration" class="form-label">Duration in minutes</label>
+                                            <input
+                                                type="number"
+                                                class="form-control"
+                                                id="duration"
+                                                name="duration"
+                                                value="{{ workout.duration }}"
+                                                min="1"
+                                                max="600"
+                                                placeholder="45"
+                                                required
+                                            >
+                                            <div class="form-text">
+                                                Duration must be between 1 and 600 minutes.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="intensity" class="form-label">Intensity</label>
+                                            <select class="form-select" id="intensity" name="intensity" required>
+                                                <option value="" disabled>Choose intensity</option>
+                                                <option value="Low" {% if workout.intensity == "Low" %}selected{% endif %}>Low</option>
+                                                <option value="Medium" {% if workout.intensity == "Medium" %}selected{% endif %}>Medium</option>
+                                                <option value="High" {% if workout.intensity == "High" %}selected{% endif %}>High</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="notes" class="form-label">Notes</label>
+                                            <textarea
+                                                class="form-control"
+                                                id="notes"
+                                                name="notes"
+                                                rows="4"
+                                                placeholder="Write anything important about this workout..."
+                                            >{{ workout.notes }}</textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex gap-3 mt-4 flex-wrap">
+                                        <button type="submit" class="btn btn-success">Save Changes</button>
+                                        <a href="{{ url_for('workouts') }}" class="btn btn-outline-success">Cancel</a>
+                                        <a href="{{ url_for('progress') }}" class="btn btn-outline-success">View Progress</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+</body>
+</html>

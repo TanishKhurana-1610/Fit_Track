@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Plans</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}"
+    >
+</head>
+<body class="premium-app-page plans-page">
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+    FitTrack
+</a>
+
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#appNav"
+                    aria-controls="appNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="appNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('workouts') }}">My Workouts</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('plans') }}">Plans</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('progress') }}">Progress</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <div class="dropdown">
+                            <button
+                                class="btn p-0 border-0 bg-transparent profile-dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Open profile menu"
+                            >
+                                {% if nav_profile and nav_profile.avatar_filename %}
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ nav_profile.avatar_filename) }}"
+                                        alt="Profile"
+                                        class="profile-icon"
+                                    >
+                                {% else %}
+                                    <span class="profile-icon profile-icon-fallback">
+                                        {% if nav_profile and nav_profile.name %}
+                                            {% set name_parts = nav_profile.name.split() %}
+                                            {{ name_parts[0][0]|upper }}{% if name_parts|length > 1 %}{{ name_parts[-1][0]|upper }}{% endif %}
+                                        {% elif nav_email %}
+                                            {{ nav_email[0]|upper }}
+                                        {% else %}
+                                            U
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 profile-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="py-5">
+        <div class="container">
+            <section class="mb-4">
+                <div class="card shadow-sm border-0 hero-card">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center g-3">
+                            <div class="col-lg-8">
+                                <h1 class="h3 mb-2">Workout Plans</h1>
+                                <p class="mb-0 text-muted">
+                                    Choose a simple training focus to guide your next workouts,
+                                    then log completed sessions through Add Workout.
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                <a href="{{ url_for('add_workout') }}" class="btn btn-success">Add Workout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="stat-box p-4 h-100">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">min</span>
+                                <span class="stat-label">Daily Exercise Time</span>
+                            </div>
+                            <h2 class="h1 mb-1">{{ today_minutes }} / {{ daily_minutes_goal }}</h2>
+                            <p class="text-muted mb-3">minutes completed today</p>
+                            <div class="progress">
+                                <div
+                                    class="progress-bar bg-success"
+                                    role="progressbar"
+                                    style="width: {{ today_goal_percent }}%;"
+                                    aria-valuenow="{{ today_goal_percent }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-box p-4 h-100">
+                            <div class="stat-box-header">
+                                <span class="stat-icon">kg</span>
+                                <span class="stat-label">Weight Goal</span>
+                            </div>
+                            <h2 class="h1 mb-1">
+                                {% if weight_goal_kg %}
+                                    {{ weight_goal_kg }} kg
+                                {% else %}
+                                    -- kg
+                                {% endif %}
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Reasonable planning helps build consistent exercise habits.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="card shadow-sm border-0 plan-goals-card">
+                    <div class="card-body p-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-lg-4">
+                                <h2 class="h4 mb-2">Goal Settings</h2>
+                                <p class="text-muted mb-lg-0">
+                                    Set simple targets for the plan page.
+                                </p>
+                            </div>
+                            <div class="col-lg-8">
+                                <form action="{{ url_for('save_plan_goals') }}" method="post" class="row g-3">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                    <div class="col-md-5">
+                                        <label for="daily_minutes_goal" class="form-label">Daily exercise minutes</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            id="daily_minutes_goal"
+                                            name="daily_minutes_goal"
+                                            class="form-control"
+                                            value="{{ daily_minutes_goal }}"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <label for="weight_goal_kg" class="form-label">Weight goal kg</label>
+                                        <input
+                                            type="number"
+                                            min="0.1"
+                                            step="0.1"
+                                            id="weight_goal_kg"
+                                            name="weight_goal_kg"
+                                            class="form-control"
+                                            value="{% if weight_goal_kg %}{{ weight_goal_kg }}{% endif %}"
+                                            placeholder="Optional"
+                                        >
+                                    </div>
+
+                                    <div class="col-md-2 d-grid">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="card shadow-sm border-0 personal-plan-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <h2 class="h4 mb-2">Personalise Your Plan</h2>
+                                <p class="text-muted mb-0">
+                                    Answer a few questions to get a suggested plan based on your goal,
+                                    available time, and training needs.
+                                </p>
+                            </div>
+                            <span class="badge text-bg-success">Rule-based guide</span>
+                        </div>
+
+                        <div class="personal-plan-layout">
+                            <form action="{{ url_for('save_plan_recommendation') }}" method="post" class="personal-plan-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div>
+                                    <label for="main_goal" class="form-label">Main goal</label>
+                                    <select id="main_goal" name="main_goal" class="form-select plan-select" required>
+                                        <option value="build_strength" {% if saved_recommendation and saved_recommendation.main_goal == "build_strength" %}selected{% endif %}>Build strength</option>
+                                        <option value="improve_cardio" {% if saved_recommendation and saved_recommendation.main_goal == "improve_cardio" %}selected{% endif %}>Improve cardio</option>
+                                        <option value="lose_weight" {% if saved_recommendation and saved_recommendation.main_goal == "lose_weight" %}selected{% endif %}>Lose weight</option>
+                                        <option value="improve_flexibility" {% if saved_recommendation and saved_recommendation.main_goal == "improve_flexibility" %}selected{% endif %}>Improve flexibility</option>
+                                        <option value="build_consistency" {% if saved_recommendation and saved_recommendation.main_goal == "build_consistency" %}selected{% endif %}>Build consistency</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="fitness_level" class="form-label">Fitness level</label>
+                                    <select id="fitness_level" name="fitness_level" class="form-select plan-select" required>
+                                        <option value="beginner" {% if saved_recommendation and saved_recommendation.fitness_level == "beginner" %}selected{% endif %}>Beginner</option>
+                                        <option value="intermediate" {% if saved_recommendation and saved_recommendation.fitness_level == "intermediate" %}selected{% endif %}>Intermediate</option>
+                                        <option value="advanced" {% if saved_recommendation and saved_recommendation.fitness_level == "advanced" %}selected{% endif %}>Advanced</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="training_days" class="form-label">Training days</label>
+                                    <select id="training_days" name="training_days" class="form-select plan-select" required>
+                                        {% for day_count in [1, 2, 3, 4, 5, 6] %}
+                                            <option value="{{ day_count }}" {% if saved_recommendation and saved_recommendation.training_days == day_count %}selected{% elif not saved_recommendation and day_count == 4 %}selected{% endif %}>
+                                                {{ day_count }} day{% if day_count != 1 %}s{% endif %} per week
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="session_length" class="form-label">Session length</label>
+                                    <select id="session_length" name="session_length" class="form-select plan-select" required>
+                                        {% for minutes in [15, 20, 30, 45, 60] %}
+                                            <option value="{{ minutes }}" {% if saved_recommendation and saved_recommendation.session_length == minutes %}selected{% elif not saved_recommendation and minutes == 30 %}selected{% endif %}>
+                                                {{ minutes }} minutes
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="personal-plan-full">
+                                    <label for="limitation" class="form-label">Training need or limitation</label>
+                                    <select id="limitation" name="limitation" class="form-select plan-select" required>
+                                        <option value="none" {% if not saved_recommendation or saved_recommendation.limitation == "none" %}selected{% endif %}>None</option>
+                                        <option value="knee_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "knee_discomfort" %}selected{% endif %}>Knee discomfort</option>
+                                        <option value="back_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "back_discomfort" %}selected{% endif %}>Back discomfort</option>
+                                        <option value="shoulder_discomfort" {% if saved_recommendation and saved_recommendation.limitation == "shoulder_discomfort" %}selected{% endif %}>Shoulder discomfort</option>
+                                        <option value="low_energy" {% if saved_recommendation and saved_recommendation.limitation == "low_energy" %}selected{% endif %}>Low energy</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="equipment_access" class="form-label">Equipment access</label>
+                                    <select id="equipment_access" name="equipment_access" class="form-select plan-select" required>
+                                        <option value="gym" {% if not saved_recommendation or saved_recommendation.equipment_access == "gym" %}selected{% endif %}>Gym</option>
+                                        <option value="home" {% if saved_recommendation and saved_recommendation.equipment_access == "home" %}selected{% endif %}>Home</option>
+                                        <option value="outdoor" {% if saved_recommendation and saved_recommendation.equipment_access == "outdoor" %}selected{% endif %}>Outdoor</option>
+                                        <option value="bodyweight_only" {% if saved_recommendation and saved_recommendation.equipment_access == "bodyweight_only" %}selected{% endif %}>Bodyweight only</option>
+                                    </select>
+                                    <p class="text-muted small mb-0 mt-1">Choose where you can realistically train.</p>
+                                </div>
+
+                                <div>
+                                    <label for="training_preference" class="form-label">Training preference</label>
+                                    <select id="training_preference" name="training_preference" class="form-select plan-select" required>
+                                        <option value="structured" {% if saved_recommendation and saved_recommendation.training_preference == "structured" %}selected{% endif %}>Structured</option>
+                                        <option value="short_simple" {% if saved_recommendation and saved_recommendation.training_preference == "short_simple" %}selected{% endif %}>Short and simple</option>
+                                        <option value="low_impact" {% if saved_recommendation and saved_recommendation.training_preference == "low_impact" %}selected{% endif %}>Low impact</option>
+                                        <option value="challenge" {% if saved_recommendation and saved_recommendation.training_preference == "challenge" %}selected{% endif %}>Challenge</option>
+                                        <option value="balanced" {% if not saved_recommendation or saved_recommendation.training_preference == "balanced" %}selected{% endif %}>Balanced</option>
+                                    </select>
+                                    <p class="text-muted small mb-0 mt-1">Tell us how you prefer workouts to feel.</p>
+                                </div>
+
+                                <div class="personal-plan-full d-grid">
+                                    <button type="submit" class="btn btn-success">Get Recommendation</button>
+                                </div>
+                            </form>
+
+                            <div class="recommendation-panel">
+                                {% if saved_recommendation %}
+                                    {% set recommendation_name = saved_recommendation.recommended_plan|lower %}
+                                    {% if "strength" in recommendation_name %}
+                                        {% set recommended_start_plan = "strength" %}
+                                    {% elif "cardio" in recommendation_name or "loss" in recommendation_name or "fat" in recommendation_name %}
+                                        {% set recommended_start_plan = "cardio" %}
+                                    {% elif "flexibility" in recommendation_name or "recovery" in recommendation_name or "mobility" in recommendation_name %}
+                                        {% set recommended_start_plan = "flexibility" %}
+                                    {% else %}
+                                        {% set recommended_start_plan = "strength" %}
+                                    {% endif %}
+
+                                    <div class="recommendation-highlight">
+                                        <span class="badge text-bg-success mb-3">Saved recommendation</span>
+                                        <h3 class="h4 mb-2">{{ saved_recommendation.recommended_plan }}</h3>
+
+                                        {% if saved_recommendation.plan_focus %}
+                                            <p class="mb-3">{{ saved_recommendation.plan_focus }}</p>
+                                        {% endif %}
+
+                                        <div class="recommendation-meta">
+                                            {% if saved_recommendation.suggested_intensity %}
+                                                <div>
+                                                    <span>Suggested intensity</span>
+                                                    <strong>{{ saved_recommendation.suggested_intensity }}</strong>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if recommendation_badges %}
+                                                <div>
+                                                    <span>Plan badges</span>
+                                                    <div class="recommendation-badges">
+                                                        {% for badge in recommendation_badges %}
+                                                            <span class="badge text-bg-success">{{ badge }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <p class="text-muted mt-3">{{ saved_recommendation.recommendation_reason }}</p>
+
+                                    <h4 class="h6 mb-3">Suggested weekly structure</h4>
+                                    <div class="recommendation-week-grid">
+                                        {% for day in recommended_weekly_structure %}
+                                            <div class="recommendation-day">
+                                                <span>{{ day.day_name }}</span>
+                                                <strong>{{ day.focus }}</strong>
+                                                <p class="mb-0">{{ day.note }}</p>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="recommendation-actions">
+                                        <a href="{{ url_for('add_workout', plan=recommended_start_plan) }}" class="btn btn-success">
+                                            Start Recommended Workout
+                                        </a>
+                                        <form action="{{ url_for('clear_plan_recommendation') }}" method="post">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-success">
+                                                Clear Recommendation
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="badge text-bg-primary mb-3">No saved recommendation</span>
+                                    <h3 class="h5 mb-2">Create a plan suggestion</h3>
+                                    <p class="text-muted mb-0">
+                                        Your saved recommendation will appear here after you complete the form.
+                                    </p>
+                                {% endif %}
+
+                                <p class="safety-note mb-0 mt-3">
+                                    This recommendation is general fitness guidance only. If you have pain,
+                                    injuries, or medical conditions, consider asking a qualified professional
+                                    before starting a new routine.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="card shadow-sm border-0 weekly-plan-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                            <div>
+                                <h2 class="h4 mb-2">This Week</h2>
+                                <p class="text-muted mb-0">
+                                    Completed minutes come from workouts you have already logged.
+                                </p>
+                            </div>
+                            <span class="badge text-bg-success">Live schedule</span>
+                        </div>
+
+                        <div class="weekly-schedule-grid">
+                            {% for day in weekly_schedule %}
+                                <div class="weekly-schedule-day {% if day.is_today %}is-today{% endif %} {% if day.status == 'Completed' %}is-completed{% endif %}">
+                                    <span class="weekly-plan-day-name">{{ day.day_name }}</span>
+                                    <strong>{{ day.date_number }}</strong>
+                                    <span class="text-muted small">{{ day.minutes }} min</span>
+                                    <span class="badge {% if day.status == 'Completed' %}text-bg-success{% elif day.status == 'Today' %}text-bg-primary{% elif day.status == 'Rest' %}text-bg-secondary{% else %}text-bg-warning{% endif %}">
+                                        {{ day.status }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100 feature-card">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-success align-self-start mb-3">Strength Focus</span>
+                                <h2 class="h4 mb-3">Strength Plan</h2>
+                                <p class="text-muted mb-4">
+                                    Build full-body strength with steady resistance training.
+                                </p>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item px-0">3 sessions per week</li>
+                                    <li class="list-group-item px-0">Focus on major muscle groups</li>
+                                    <li class="list-group-item px-0">Track weight and duration</li>
+                                </ul>
+                                <a href="{{ url_for('add_workout', plan='strength') }}" class="btn btn-success mt-auto">
+                                    Log Strength Session
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100 feature-card">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-primary align-self-start mb-3">Endurance Focus</span>
+                                <h2 class="h4 mb-3">Cardio Plan</h2>
+                                <p class="text-muted mb-4">
+                                    Improve endurance with regular running, cycling, or swimming.
+                                </p>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item px-0">2-4 sessions per week</li>
+                                    <li class="list-group-item px-0">Mix low and medium intensity</li>
+                                    <li class="list-group-item px-0">Record distance or notes</li>
+                                </ul>
+                                <a href="{{ url_for('add_workout', plan='cardio') }}" class="btn btn-primary mt-auto">
+                                    Log Cardio Session
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100 feature-card">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <span class="badge text-bg-warning align-self-start mb-3">Recovery Focus</span>
+                                <h2 class="h4 mb-3">Flexibility Plan</h2>
+                                <p class="text-muted mb-4">
+                                    Support recovery and mobility with stretching or yoga.
+                                </p>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item px-0">Short sessions after workouts</li>
+                                    <li class="list-group-item px-0">Focus on controlled movement</li>
+                                    <li class="list-group-item px-0">Note tight or sore areas</li>
+                                </ul>
+                                <a href="{{ url_for('add_workout', plan='flexibility') }}" class="btn btn-warning mt-auto">
+                                    Log Flexibility Session
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-4">
+                <div class="card shadow-sm border-0 weekly-plan-card">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center g-3 mb-3">
+                            <div class="col-lg-8">
+                                <h2 class="h4 mb-2">Suggested Training Mix</h2>
+                                <p class="text-muted mb-0">
+                                    A lightweight reference for balancing the week. Your live schedule above
+                                    shows completed workout minutes.
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                <span class="badge text-bg-success">Guide</span>
+                            </div>
+                        </div>
+
+                        <div class="weekly-plan-grid">
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Strength</span>
+                                <strong>Strength</strong>
+                                <span class="badge text-bg-success">Planned</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Cardio</span>
+                                <strong>Cardio</strong>
+                                <span class="badge text-bg-success">Planned</span>
+                            </div>
+
+                            <div class="weekly-plan-day">
+                                <span class="weekly-plan-day-name">Recovery</span>
+                                <strong>Recovery</strong>
+                                <span class="badge text-bg-primary">Recovery</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-4">
+                <div class="card shadow-sm border-0 planning-tips-card">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-2">Planning Tips</h2>
+                        <p class="text-muted mb-3">
+                            Use the plan page as a guide for deciding what to train next. Your actual
+                            workout history updates only after you log a completed session.
+                        </p>
+
+                        <div class="planning-tips-grid">
+                            <div class="planning-tip">
+                                <span class="planning-tip-number">1</span>
+                                <p class="mb-0">Balance strength, cardio, and recovery across the week.</p>
+                            </div>
+
+                            <div class="planning-tip">
+                                <span class="planning-tip-number">2</span>
+                                <p class="mb-0">Avoid training the same muscle group too hard every day.</p>
+                            </div>
+
+                            <div class="planning-tip">
+                                <span class="planning-tip-number">3</span>
+                                <p class="mb-0">Log completed sessions through Add Workout.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+</body>
+</html>
