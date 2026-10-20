@@ -24,15 +24,6 @@ Main features include:
 - CSRF protection on all forms
 - Responsive interface for use across devices
 
-## Group members
-
-| UWA ID | Name | GitHub username |
-|-------|------|-----------------|
-| 24038858 | Giam Kie Shen | kiegiam |
-| 24017328 | Steven Wang | docx1145 |
-| 23902662 | Lucas Wu | whxgit665 |
-| 23986795 | Tanish Khurana | tanish-khurana |
-
 ## Instructions to launch the application
 
 ### Recommended Python version
